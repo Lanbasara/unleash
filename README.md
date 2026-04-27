@@ -10,31 +10,59 @@ Unleash is a Claude Code skill suite that helps developers design bespoke harnes
 
 Version 0.4.0 adds a `using-unleash` entry-point skill — the meta gate that establishes chain discipline (sequential ordering, scope boundary at committed code, fresh-context reviews, archiving-vs-reporting routing) before any other `unleash:*` skill is invoked. The 7-skill workflow chain (intake + build + lifecycle) plus `unleash:reporting` (B-layer-only end-of-life parallel to archiving) shipped in 0.3.x. Together they form a 9-skill suite: 1 entry skill + 8 workflow skills.
 
-## Installation (local development)
+## Installation
 
-To use Unleash locally during development:
+### Option 1: Install from marketplace (recommended)
 
-1. Clone or symlink the plugin directory into your Claude Code plugins cache:
-   ```bash
-   ln -s /path/to/unleash ~/.claude/plugins/cache/local/unleash/0.1.0
-   ```
-   Alternatively, register the unleash directory as a local marketplace source in your settings.
+Add the Lanbasara marketplace and install Unleash directly inside Claude Code:
 
-2. Add the plugin to your `~/.claude/settings.json`:
-   ```json
-   {
-     "enabledPlugins": {
-       "unleash@local": true
-     }
-   }
-   ```
+```
+/plugin marketplace add https://github.com/Lanbasara/unleash-marketplace
+/plugin install unleash@lanbasara
+```
 
-3. Restart Claude Code to load the plugin and register its skills.
+Restart Claude Code. Verify:
+```
+What skills in the unleash: namespace are available?
+```
 
-4. Verify installation by asking Claude to list available skills:
-   ```
-   What skills in the unleash: namespace are available?
-   ```
+### Option 2: Install from GitHub (skill-level)
+
+For a lightweight install without marketplace registration, clone and symlink individual skills:
+
+```bash
+git clone https://github.com/Lanbasara/unleash.git
+cd unleash
+for d in skills/*/; do
+  ln -s "$(pwd)/$d" ~/.claude/skills/unleash-$(basename "$d")
+done
+```
+
+Restart Claude Code. Skills are available under the `unleash:` namespace immediately.
+
+### Option 3: Local development (--plugin-dir)
+
+When developing or modifying Unleash, load the plugin directly from source:
+
+```bash
+claude --plugin-dir ./unleash
+```
+
+Or symlink into the global plugin cache:
+```bash
+ln -s /path/to/unleash ~/.claude/plugins/unleash
+```
+
+Then enable in `~/.claude/settings.json`:
+```json
+{
+  "enabledPlugins": {
+    "unleash": true
+  }
+}
+```
+
+> **Note:** Do not use `unleash@local` unless you have a local marketplace file registered. The `local` suffix refers to a marketplace name, not a filesystem path.
 
 ## Skills in 0.4.0
 
