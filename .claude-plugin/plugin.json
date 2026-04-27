@@ -1,0 +1,17 @@
+{
+  "name": "unleash",
+  "version": "0.4.0",
+  "description": "Design harnesses once, let the AI run — a Claude Code skill suite for building bespoke harnesses.",
+  "author": {
+    "name": "haokun",
+    "email": "haokun.guo@zoom.us"
+  },
+  "license": "MIT",
+  "keywords": [
+    "harness",
+    "skills",
+    "ai-workflow",
+    "agent-safety",
+    "spec-driven"
+  ]
+}

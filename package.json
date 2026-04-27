@@ -1,0 +1,7 @@
+{
+  "name": "unleash",
+  "version": "0.4.0",
+  "type": "module",
+  "description": "Design harnesses once, let the AI run.",
+  "license": "MIT"
+}
