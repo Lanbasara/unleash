@@ -14,7 +14,7 @@
     {
       "name": "unleash",
       "description": "A Claude Code skill suite for designing bespoke harnesses.",
-      "source": "."
+      "source": "./"
     }
   ]
 }
