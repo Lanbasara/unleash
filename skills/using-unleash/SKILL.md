@@ -123,6 +123,22 @@ Every Unleash skill enforces these. Treat them as invariants of the chain, not a
 - **`testing_mode` is a spec field, not a default.** `unleash:debating` v0.2.1 captures the user's chosen testing approach (A: TDD / B: manual checklist / C: skip / D: other). `unleash:planning` v0.3.2 honors it by branching the Test phase shape. Do not silently coerce a B-mode (manual checklist) project into pytest TDD.
 - **Mutual exclusion of archiving and reporting.** Detected by manifest presence. Do not invoke both.
 
+## Long-duration dialogue guard
+
+When any Unleash skill has exchanged more than 8 messages with the user (counting from the skill's first user-facing message):
+
+**Before responding to the user's latest message, the skill MUST:**
+1. Re-read `docs/unleash/specs/<latest-spec>.md` from disk (if a spec exists)
+2. Re-read `docs/unleash/plans/<latest-plan>.md` from disk (if a plan exists)
+3. Output an **Anchor Summary** of no more than 5 bullet points:
+   - What the harness was originally designed to do (from spec)
+   - What decisions are committed and cannot change without user approval (from spec)
+   - What the current turn is actually about
+   - Whether the current turn threatens any committed decision
+   - Recommended stance: proceed / pause-for-confirmation / reject-as-out-of-scope
+
+This Anchor Summary is not shown to the user unless the stance is pause-for-confirmation or reject. It is an internal reset mechanism.
+
 ## Decision flow
 
 ```

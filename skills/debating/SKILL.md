@@ -128,6 +128,13 @@ Only now do you engage the user. The gap map is complete and guides every challe
 - Each challenge targets ONE gap from the gap map and aims to close it — when the user answers, update your internal gap map to reflect what is now closed
 - Multiple-choice preferred: 3–5 options, last option always "other / describe yourself"
 - Each challenge produces one of three outcomes: (A) the notes can be updated with new concrete content, (B) the user explicitly acknowledges a known trade-off that will be documented in the spec, or (C) the element is explicitly marked N/A with a stated reason
+- **After the user responds and before closing the gap, perform a Drift Check against the original brainstorm notes.** This is not optional. For every user answer that closes a gap, classify the relationship between the answer and the brainstorm baseline:
+  - **DERIVED** — the answer is consistent with or elaborates on a specific brainstorm passage; cite the passage
+  - **OVERRIDES** — the answer replaces or contradicts an earlier decision recorded in the brainstorm; cite both the original and the overriding statement
+  - **NARROWS** — the answer scopes down a broader intent expressed in the brainstorm; cite what was broad and what it became
+  - **NEW_GROUND** — the answer introduces a constraint or decision with no basis in the brainstorm; flag this explicitly
+  - Record all OVERRIDES and NARROWS entries; they become mandatory input for Phase E
+  - A gap closure without a Drift Check is a skill failure: the model has not demonstrated that it read the brainstorm before accepting the user's answer
 
 **Make the gap map externally visible in your first user-facing message.** Before issuing the first challenge, share the gap map (at least 3 specific gaps, each cited to a specific passage). This demonstrates Phase B ran and gives the user an overview of what the session will close. Do not interleave gap-map listing and challenges — show the map first, then issue the first challenge.
 
@@ -146,6 +153,38 @@ After each challenge cycle (one question, user responds), perform a convergence 
 - **Gaps remain and user gave a clear decision?** Update the gap map (close the gap), and loop back to Phase C for the next gap.
 - **Gaps remain and user's answer is unclear or partial?** Loop back to Phase C on those specific items — do not accept a non-answer and advance. If a user gives a non-answer ("it depends", "I'll figure it out later"), follow up: "For the spec to be concrete enough to drive implementation, this gap needs a decision now. Could you choose one of the options, or describe a criterion for making the call?"
 - **Never draft the spec with a gap that the user hasn't explicitly closed or deferred.** A spec section written with invented details is not a spec — it is a placeholder that will be wrong.
+
+### Phase E — Adversarial Audit (Drift Diff)
+
+After the spec draft is structurally complete but **BEFORE presenting it to the user for approval**, run a mandatory adversarial audit. Phase E is a HARD-GATE: the spec must not be shown to the user until the audit passes.
+
+**Trigger:** Phase D indicates the gap map is empty (or all remaining items explicitly deferred/out-of-scope) and the spec draft has passed structural validation.
+
+**Input:**
+- `docs/unleash/brainstorm/<YYYY-MM-DD>-<name>.md` (committed version from Phase A; re-read from disk, do not rely on memory)
+- `docs/unleash/specs/<YYYY-MM-DD>-<name>-spec.md` (current draft)
+- The Drift Check records collected during Phase C (all OVERRIDES and NARROWS entries)
+
+**Execution:** Dispatch a fresh-context subagent (the auditor) with:
+- The full text of the brainstorm notes
+- The full text of the spec draft
+- The Drift Check records (OVERRIDES and NARROWS)
+
+**Auditor task:**
+1. Compare every requirement, decision, and constraint in the spec draft against the brainstorm notes.
+2. Produce a Drift Audit with three categories:
+   - **OVERRIDE** — spec contains a decision that contradicts or replaces a decision recorded in the brainstorm
+   - **NARROWING** — spec scopes down a broader intent expressed in the brainstorm without explicit rationale
+   - **NEW_GROUND** — spec contains requirements with no basis in the brainstorm
+3. For each OVERRIDE and NARROWING: cite the exact brainstorm passage and the exact spec passage.
+4. For NEW_GROUND: flag whether it is a legitimate elaboration (filling detail the brainstorm left open) or an invention (introducing constraints the user never agreed to).
+
+**Blocking rule:**
+- If the Drift Audit contains any unconfirmed OVERRIDE or NARROWING: **STOP. Do not present the spec to the user.** Return to Phase C and re-open the corresponding gap with an explicit challenge: "The spec draft says X, but the brainstorm recorded Y. Is this override intentional?"
+- Only when all OVERRIDEs and NARROWINGs are either (a) confirmed by the user as intentional, or (b) removed from the spec, may the audit pass.
+- NEW_GROUND items must be reviewed: legitimate elaborations may remain; inventions must be removed or moved to Out of Scope with user approval.
+
+**Output artifact:** `docs/unleash/specs/.draft-audit.md` (temporary; deleted after spec is committed; exists only to record the audit trail)
 
 ## Challenge categories as reminders (NOT a script)
 
@@ -249,6 +288,7 @@ Complete these items in order. Use TodoWrite to track progress.
 1. Phase A: read brainstorm notes in full, re-verify project context files referenced in the Phase A Summary, note the brainstorm's commit SHA, and read `references/unleash-knowledge.md` §1 and §6
 2. Phase B: build the cognitive gap map internally (do not show yet) — for each gap, record element or area, specific passage, gap type, and what would close it
 3. Phase C: make the gap map externally visible in the first user-facing message (at least 3 specific gaps, each cited to a specific passage from the brainstorm notes), then issue the first grounded challenge
-4. Phase C: continue one challenge at a time, each grounded in a specific passage or observation; update the gap map as gaps close
+4. Phase C: continue one challenge at a time, each grounded in a specific passage or observation; perform Drift Check after each user response; update the gap map as gaps close; record all OVERRIDES and NARROWS
 5. Phase D: convergence check after each challenge — loop to Phase C if gaps remain; never advance with an open gap the user hasn't explicitly closed or deferred
-6. Draft `docs/unleash/specs/<YYYY-MM-DD>-<name>-spec.md` with all 6 required sections; run structural validation; present to user; commit on approval; STOP (do not invoke planning)
+6. Phase E: when gap map is clear and spec draft passes structural validation, dispatch fresh-context auditor with brainstorm + spec draft + Drift Check records; run adversarial audit; if unconfirmed OVERRIDE/NARROWING found, return to Phase C; if audit PASS, proceed
+7. Draft `docs/unleash/specs/<YYYY-MM-DD>-<name>-spec.md` with all 6 required sections; run structural validation; present to user; commit on approval; STOP (do not invoke planning)
