@@ -112,6 +112,11 @@ For task i in 1..N:
    - **BLOCKED** → the controller provides additional context (from the plan, the spec, or the project state) and re-dispatches task i with the same model
    - **NEEDS_CONTEXT** → same as BLOCKED — add context, re-dispatch
 4. If re-dispatch fails twice on the same task, escalate: report the specific blocker to the user and STOP (do not try yet another re-dispatch)
+5. **Group Checkpoint** — after completing the last task in a Group (as declared in the plan's Group structure), verify before proceeding to the next Group:
+   - Re-read the plan's Group section for this Group (the Dependency Map and task list for the Group)
+   - Verify (a) every task in the Group has status DONE or DONE_WITH_CONCERNS, (b) all artifacts declared in the Group's Dependency Map entries exist at their declared paths, (c) `testing_mode` (if declared in the spec) has not been silently altered by any task in the Group
+   - If any verification fails: STOP, report the specific deviation to the user, and do not proceed to the next Group until the user resolves it
+   - If all verifications pass: append a checkpoint record to `.unleash/checkpoints/group-<N>.md` (create the directory if needed) noting the Group, task IDs, commit SHAs, and pass/fail status; then proceed
 
 **What this Phase C does NOT do:**
 - It does NOT review the subagent's output for spec compliance
@@ -145,8 +150,19 @@ You are implementing task <TASK NUMBER>: <TASK TITLE> for the <HARNESS NAME> har
 **Harness Goal:** <COPY FROM PLAN HEADER>
 **Harness Case:** <coding | metric | hybrid | freeform>
 **Guardian Role:** <ONE SENTENCE FROM PLAN HEADER>
+
+**MANDATORY — Read these files before doing anything:**
+You MUST read the following files from disk using your ReadFile tool. The design contract is in these files, not in this prompt summary.
+
+1. `docs/unleash/specs/<spec-filename>.md` — the committed spec (your hard constraint)
+2. `docs/unleash/plans/<plan-filename>.md` — the plan containing your task (find your task by title)
+3. `.unleash/phases/<current-phase>.json` — your phase allowlist and exit gate
+
 **This task's upstream artifacts** (produced by earlier tasks): <LIST FROM DEPENDENCY MAP, or "none" if this is the first task>
 **This task's downstream artifacts** (consumed by later tasks or runtime): <LIST FROM DEPENDENCY MAP>
+
+**Orientation summary** (for context only — do NOT treat this as the contract):
+<ONE SENTENCE: what this task is about>
 
 ## Before you begin
 
@@ -208,9 +224,10 @@ Nothing after this paragraph. No follow-up section. No "actual effective path". 
 Complete these items in order. Use TodoWrite to track progress.
 
 1. Phase A: read plan.md + knowledge doc §3 and §4; note plan commit SHA
-2. Phase A: extract all tasks into an internal list with full text blobs preserved
-3. Phase B: prepare dispatch-plan per task (task text + scene-setting)
+2. Phase A: extract all tasks into an internal list with full text blobs preserved; note Group boundaries from the plan
+3. Phase B: prepare dispatch-plan per task (task text + amputated scene-setting with artifact paths and mandatory file-read instructions)
 4. Phase C: dispatch task 1 with FULL task text pasted; wait for report
 5. Phase C: handle status per rules (DONE → note + **append to manifest** + next; DONE_WITH_CONCERNS → note + next; BLOCKED/NEEDS_CONTEXT → add context + re-dispatch; do NOT review output)
-6. Phase C: repeat sequentially for all N tasks (never parallel, never batch)
-7. Phase D: summarize commits and concerns verbatim; STOP (do not invoke validating, do not review)
+6. Phase C: after completing the last task in each Group, run Group Checkpoint (verify artifact existence, verify testing_mode conservation); STOP on deviation
+7. Phase C: repeat sequentially for all N tasks and all Groups (never parallel, never batch)
+8. Phase D: summarize commits, concerns, and checkpoint results; STOP (do not invoke validating, do not review)
