@@ -4,7 +4,7 @@
 
 *From harness to unleash — constraint as the path to freedom.*
 
-[![Version](https://img.shields.io/badge/version-0.4.0-blue)](https://github.com/Lanbasara/unleash)
+[![Version](https://img.shields.io/badge/version-0.5.0-blue)](https://github.com/Lanbasara/unleash)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Claude Code](https://img.shields.io/badge/for-Claude%20Code-orange)](https://claude.ai/code)
 
